@@ -8,7 +8,6 @@ environment:
   sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
-  circle_flags: ^3.0.1
   flutter:
     sdk: flutter
   flutter_localizations:
@@ -20,13 +19,13 @@ dev_dependencies:
     sdk: flutter
   mocktail: ^1.0.2
   very_good_analysis: ^5.0.0+1
-  
 
 flutter:
   assets:
     - assets/flags/
     - packages/fl_country_code_picker/i18n/af.json
     - packages/fl_country_code_picker/i18n/am.json
+    - packages/fl_country_code_picker/i18n/an.json
     - packages/fl_country_code_picker/i18n/ha.json
     - packages/fl_country_code_picker/i18n/ku.json
     - packages/fl_country_code_picker/i18n/ml.json
@@ -96,3 +95,4 @@ flutter:
     - packages/fl_country_code_picker/i18n/uk.json
     - packages/fl_country_code_picker/i18n/uz.json
     - packages/fl_country_code_picker/i18n/zh.json
+    - packages/fl_country_code_picker/i18n/hn.json
