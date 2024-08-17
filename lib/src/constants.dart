@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+/// Default app margin.
+/// https://m3.material.io/foundations/layout/applying-layout/compact#5a83ddd7-137f-4657-ba2d-eb08cac065e7
+const kAppMargin = 16.0;
+
 /// Default search bar input decoration.
 const kInputDecoration = InputDecoration(
   hintText: "'Country', 'Code' or 'Dial Code'",
@@ -18,7 +22,7 @@ const kInputDecoration = InputDecoration(
 );
 
 /// Default favorites icon.
-const kFavoritesIcon = Icon(Icons.favorite, color: Colors.red);
+const kFavoritesIcon = Icon(Icons.favorite, size: 24, color: Colors.red);
 
 /// Default modal and TextField default borderRadius.
 const kBorderRadius = Radius.circular(10);

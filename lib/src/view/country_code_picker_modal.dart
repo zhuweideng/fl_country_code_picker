@@ -1,6 +1,4 @@
-import 'package:circle_flags/circle_flags.dart';
 import 'package:fl_country_code_picker/fl_country_code_picker.dart';
-import 'package:fl_country_code_picker/src/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
@@ -14,81 +12,40 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 class CountryCodePickerModal extends StatefulWidget {
   /// {@macro country_code_picker_modal}
   const CountryCodePickerModal({
-    required this.localize,
-    required this.favoritesIcon,
-    required this.showSearchBar,
-    required this.showDialCode,
-    this.title,
-    this.defaultAppbarBackgroundColor = Colors.white,
-    this.defaultAppbarForegroundColor = Colors.black,
-    this.defaultAppbarCloseIconBackgroundColor =
-        const Color.fromARGB(255, 224, 224, 224),
-    this.defaultAppbarText = 'Select Country Code',
-    this.defaultAppbarCloseIcon = Icons.clear_rounded,
+    required this.favoriteCountries,
+    required this.filteredCountries,
+    required this.localized,
+    required this.pickerParams,
+    required this.pickerItemParams,
+    required this.pickerSearchParams,
+    required this.pickerTitleParams,
     this.focusedCountry,
-    this.searchBarDecoration,
-    this.favorites = const [],
-    this.filteredCountries = const [],
-    this.countryTextStyle,
-    this.dialCodeTextStyle,
-    this.horizontalTitleGap,
-    this.searchBarTextStyle,
     super.key,
   });
-
-  /// {@macro favorites}
-  final List<String> favorites;
 
   /// {@macro filtered_countries}
   final List<String> filteredCountries;
 
-  /// {@macro favorite_icon}
-  final Icon? favoritesIcon;
+  /// {@macro favorite_countries}
+  final List<String> favoriteCountries;
 
-  /// {@macro show_search_bar}
-  final bool showSearchBar;
-
-  /// {@macro show_dial_code}
-  final bool showDialCode;
+  /// {@macro localize}
+  final bool localized;
 
   /// If not null, automatically scrolls the list view to this country.
   final String? focusedCountry;
 
-  /// {@macro title}
-  final Widget? title;
+  /// {@macro picker_params}
+  final PickerParams pickerParams;
 
-  /// {@macro default_appbar_background_color}
-  final Color defaultAppbarBackgroundColor;
+  /// {@macro picker_title_params}
+  final PickerTitleParams pickerTitleParams;
 
-  /// {@macro default_appbar_foreground_color}
-  final Color defaultAppbarForegroundColor;
+  /// {@macro picker_item_params}
+  final PickerItemParams pickerItemParams;
 
-  /// {@macro default_appbar_close_icon_background_color}
-  final Color defaultAppbarCloseIconBackgroundColor;
-
-  /// {@macro default_appbar_text}
-  final String defaultAppbarText;
-
-  /// {@macro default_appbar_close_icon}
-  final IconData defaultAppbarCloseIcon;
-
-  /// {@macro search_bar_decoration}
-  final InputDecoration? searchBarDecoration;
-
-  /// {@macro localize}
-  final bool localize;
-
-  /// {@macro country_text_style}
-  final TextStyle? countryTextStyle;
-
-  /// {@macro dial_code_text_style}
-  final TextStyle? dialCodeTextStyle;
-
-  /// {@macro search_bar_text_style}
-  final TextStyle? searchBarTextStyle;
-
-  /// space between flag and country name
-  final double? horizontalTitleGap;
+  /// {@macro picker_search_params}
+  final PickerSearchParams pickerSearchParams;
 
   @override
   State<CountryCodePickerModal> createState() => _CountryCodePickerModalState();
@@ -107,24 +64,37 @@ class _CountryCodePickerModalState extends State<CountryCodePickerModal> {
   }
 
   Future<void> _initCountries() async {
-    final allCountryCodes = codes.map(CountryCode.fromMap).toList();
+    final complete = codes.map(CountryCode.fromMap).toList();
 
+    // We're pulling the list of favorites from the complete.
+    // This is necessary to put the favorites at the top of the list.
     final favoriteList = <CountryCode>[
-      if (widget.favorites.isNotEmpty)
-        ...allCountryCodes.where((c) => widget.favorites.contains(c.code)),
+      if (widget.favoriteCountries.isNotEmpty)
+        ...complete.where((c) => widget.favoriteCountries.contains(c.code)),
     ];
 
+    // In this filteredList, we're removing the countries that are filtered
+    // programmatically.
     final filteredList = [
       ...widget.filteredCountries.isNotEmpty
-          ? allCountryCodes.where(
-              (c) => widget.filteredCountries.contains(c.code),
-            )
-          : allCountryCodes,
-    ]..removeWhere((c) => widget.favorites.contains(c.code));
+          ? complete.where((c) => widget.filteredCountries.contains(c.code))
+          : complete,
+    ]..removeWhere((c) => widget.favoriteCountries.contains(c.code));
 
+    // Here we're merging the favorites and filtered as one list.
+    //
+    // baseList contains the clean version of the merged favorites
+    // and filtered. This will be used for example if the user tried
+    // to query for country codes, we'll use this list to reset it
+    // back to the base copy.
     baseList = [...favoriteList, ...filteredList];
+
+    // availableCountryCodes contains the items that will be visible
+    // to the user.
     availableCountryCodes.addAll(baseList);
 
+    // Temporary fix due to some unknown bug where the controller
+    // was having a race condition in render and attachment.
     await Future<void>.delayed(Duration.zero);
     if (!itemScrollController.isAttached) return;
 
@@ -140,139 +110,50 @@ class _CountryCodePickerModalState extends State<CountryCodePickerModal> {
     }
   }
 
+  void onSearchChanged(String value) {
+    final results = [
+      ...baseList.where(
+        (c) {
+          final country = widget.localized ? c.localize(context) : c;
+          final query = value.toLowerCase();
+          return country.code.toLowerCase().contains(query) ||
+              country.dialCode.toLowerCase().contains(query) ||
+              country.name.toLowerCase().contains(query);
+        },
+      ),
+    ];
+
+    availableCountryCodes
+      ..clear()
+      ..addAll(results);
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: widget.pickerParams.backgroundColor,
       body: CustomScrollView(
+        primary: true,
         slivers: [
-          if (widget.title != null)
-            SliverPersistentHeader(
-              delegate: _StickyTitleDelegate(
-                height: kToolbarHeight,
-                title: widget.title!,
-              ),
-              pinned: true,
-            )
-          else
-            SliverAppBar(
-              backgroundColor: widget.defaultAppbarBackgroundColor,
-              foregroundColor: widget.defaultAppbarForegroundColor,
-              surfaceTintColor: Colors.transparent,
-              leading: Container(
-                margin: const EdgeInsets.only(left: 16, top: 11, bottom: 11),
-                decoration: BoxDecoration(
-                  color: widget.defaultAppbarCloseIconBackgroundColor,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: IconButton(
-                    icon: Icon(
-                      widget.defaultAppbarCloseIcon,
-                      color: widget.defaultAppbarForegroundColor,
-                      size: 18,
-                    ),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ),
-              ),
-              expandedHeight: 114,
-              pinned: true,
-              flexibleSpace: LayoutBuilder(
-                builder: (BuildContext context, BoxConstraints constraints) {
-                  final top = constraints.biggest.height;
-                  var paddingStart = 82 -
-                      (82 - 16) *
-                          (top - kToolbarHeight) /
-                          (114 - kToolbarHeight);
-                  paddingStart = paddingStart.clamp(16.0, 82.0);
-                  // if (kDebugMode) {
-                  //   print('$top - $kToolbarHeight - $paddingStart');
-                  // }
-
-                  return FlexibleSpaceBar(
-                    centerTitle: false,
-                    titlePadding: EdgeInsetsDirectional.only(
-                      start: paddingStart,
-                      bottom: 15,
-                    ),
-                    expandedTitleScale: 1.49,
-                    title: Text(
-                      widget.defaultAppbarText,
-                      style: TextStyle(
-                        color: widget.defaultAppbarForegroundColor,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 19,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          if (widget.showSearchBar)
-            SliverPersistentHeader(
-              delegate: _StickySearchBarDelegate(
-                searchBar: ColoredBox(
-                  color: widget.defaultAppbarBackgroundColor,
-                  child: CcpSearchBar(
-                    decoration: widget.searchBarDecoration,
-                    style: widget.searchBarTextStyle,
-                    onChanged: (query) {
-                      availableCountryCodes
-                        ..clear()
-                        ..addAll(
-                          List<CountryCode>.from(
-                            baseList.where(
-                              (c) {
-                                final country =
-                                    widget.localize ? c.localize(context) : c;
-
-                                return country.code
-                                        .toLowerCase()
-                                        .contains(query.toLowerCase()) ||
-                                    country.dialCode
-                                        .toLowerCase()
-                                        .contains(query.toLowerCase()) ||
-                                    country.name
-                                        .toLowerCase()
-                                        .contains(query.toLowerCase());
-                              },
-                            ),
-                          ),
-                        );
-                      setState(() {});
-                    },
-                  ),
-                ),
-                height: 60,
-              ),
-              pinned: true,
-            ),
+          PickerTitle(
+            params: widget.pickerTitleParams,
+            pickerParams: widget.pickerParams,
+          ),
+          PickerSearch(
+            params: widget.pickerSearchParams,
+            pickerParams: widget.pickerParams,
+            onChanged: onSearchChanged,
+          ),
           SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, index) {
                 final code = availableCountryCodes[index];
-                final name =
-                    widget.localize ? code.localize(context).name : code.name;
-
-                final textTheme = Theme.of(context).textTheme;
-                return ListTile(
-                  onTap: () => Navigator.pop(context, code),
-                  leading: CircleFlag(code.code, size: 40),
-                  horizontalTitleGap: widget.horizontalTitleGap,
-                  title: Text(
-                    name,
-                    style: widget.countryTextStyle ?? textTheme.labelLarge,
-                  ),
-                  subtitle: CcpDefaultListItemTrailing(
-                    code: code,
-                    icon: widget.favoritesIcon,
-                    favorites: widget.favorites,
-                    showDialCode: widget.showDialCode,
-                    dialCodeTextStyle:
-                        widget.dialCodeTextStyle ?? textTheme.labelLarge,
-                  ),
+                final params = widget.pickerItemParams;
+                return PickerItem(
+                  code: code,
+                  favorites: widget.favoriteCountries,
+                  params: params,
                 );
               },
               childCount: availableCountryCodes.length,
@@ -281,55 +162,5 @@ class _CountryCodePickerModalState extends State<CountryCodePickerModal> {
         ],
       ),
     );
-  }
-}
-
-class _StickySearchBarDelegate extends SliverPersistentHeaderDelegate {
-  _StickySearchBarDelegate({required this.searchBar, required this.height});
-  final Widget searchBar;
-  final double height;
-
-  @override
-  double get minExtent => height;
-  @override
-  double get maxExtent => height;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return SizedBox.expand(child: searchBar);
-  }
-
-  @override
-  bool shouldRebuild(_StickySearchBarDelegate oldDelegate) {
-    return searchBar != oldDelegate.searchBar || height != oldDelegate.height;
-  }
-}
-
-class _StickyTitleDelegate extends SliverPersistentHeaderDelegate {
-  _StickyTitleDelegate({required this.title, required this.height});
-  final Widget title;
-  final double height;
-
-  @override
-  double get minExtent => height;
-  @override
-  double get maxExtent => height;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return SizedBox.expand(child: title);
-  }
-
-  @override
-  bool shouldRebuild(_StickyTitleDelegate oldDelegate) {
-    return title != oldDelegate.title || height != oldDelegate.height;
   }
 }

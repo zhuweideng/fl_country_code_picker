@@ -1,4 +1,4 @@
-import 'package:fl_country_code_picker/fl_country_code_picker.dart';
+import 'package:fl_country_code_picker/fl_country_code_picker.dart' as fl;
 import 'package:flutter/material.dart';
 import '../demo.dart';
 
@@ -10,9 +10,9 @@ class DefaultPickerView extends StatefulWidget {
 }
 
 class _DefaultPickerViewState extends State<DefaultPickerView> {
-  late final FlCountryCodePicker countryPicker;
+  late final fl.FlCountryCodePicker countryPicker;
   late final TextEditingController phoneTextController;
-  CountryCode? countryCode;
+  fl.CountryCode? countryCode;
 
   bool hasMaxLengthError = false;
 
@@ -21,7 +21,7 @@ class _DefaultPickerViewState extends State<DefaultPickerView> {
   @override
   void initState() {
     super.initState();
-    countryCode = CountryCode.fromName('United States');
+    countryCode = fl.CountryCode.fromName('United States');
 
     phoneTextController = TextEditingController()
       ..addListener(() {
@@ -38,13 +38,7 @@ class _DefaultPickerViewState extends State<DefaultPickerView> {
         }
       });
 
-    countryPicker = const FlCountryCodePicker(
-      countryTextStyle: TextStyle(
-        color: Colors.red,
-        fontSize: 16,
-      ),
-      dialCodeTextStyle: TextStyle(color: Colors.green, fontSize: 16),
-    );
+    // countryPicker = const fl.FlCountryCodePicker();
   }
 
   @override
@@ -53,7 +47,7 @@ class _DefaultPickerViewState extends State<DefaultPickerView> {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const PickerTitle(title: 'Default Picker View'),
+        const DemoTitle(title: 'Default Picker View'),
         TextFormField(
           textInputAction: TextInputAction.done,
           keyboardType: TextInputType.number,
@@ -90,10 +84,9 @@ class _DefaultPickerViewState extends State<DefaultPickerView> {
           decoration: InputDecoration(
             prefix: GestureDetector(
               onTap: () async {
-                final code = await countryPicker.showPicker(
-                  context: context,
-                  scrollToDeviceLocale: true,
-                );
+                final code =
+                    await fl.FlCountryCodePicker.showPicker(context: context);
+
                 if (code != null) {
                   setState(() => countryCode = code);
                   countryTextController.text = code.name;

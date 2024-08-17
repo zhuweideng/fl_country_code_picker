@@ -1,8 +1,9 @@
+import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:fl_country_code_picker/fl_country_code_picker.dart';
-import 'package:fl_country_code_picker/src/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 /// {@template fl_country_code_picker}
 /// A Flutter package for showing a modal that contains country dial code.
@@ -12,228 +13,167 @@ import 'package:flutter/material.dart';
 /// {@endtemplate}
 class FlCountryCodePicker {
   /// {@macro fl_country_code_picker}
-  const FlCountryCodePicker({
-    this.title,
-    this.defaultAppbarBackgroundColor = Colors.white,
-    this.defaultAppbarForegroundColor = Colors.black,
-    this.defaultAppbarCloseIconBackgroundColor =
-        const Color.fromARGB(255, 224, 224, 224),
-    this.defaultAppbarText = 'Select Country Code',
-    this.defaultAppbarCloseIcon = Icons.clear_rounded,
-    this.localize = true,
-    this.horizontalTitleGap,
-    this.searchBarDecoration,
-    this.showDialCode = true,
-    this.showSearchBar = true,
-    this.favorites = const [],
-    this.filteredCountries = const [],
-    this.favoritesIcon,
-    this.countryTextStyle,
-    this.dialCodeTextStyle,
-    this.searchBarTextStyle,
-  });
+  // const FlCountryCodePicker({
+  //   this.filteredCountries = const [],
+  // });
+  const FlCountryCodePicker._();
 
-  /// {@template favorites_icon}
-  /// Custom icon of favorite countries.
+  /// Gets the current instance of the class.
   ///
-  /// <i class="material-icons md-36">favorite</i> &#x2014;
-  /// Defaults to `Icons.favorite`
-  /// {@endtemplate}
-  final Icon? favoritesIcon;
+  /// Creates new instance if `null`.
+  factory FlCountryCodePicker.getInstance() {
+    if (_instance != null) return _instance!;
+    _instance = const FlCountryCodePicker._();
+    return _instance!;
+  }
 
-  /// {@template horizontal_title_gap}
-  /// Horizontal space between flag, country name, and trailing icon.
-  /// {@endtemplate}
-  final double? horizontalTitleGap;
+  /// Initializes the configs for the picker.
+  static void initalize({
+    PickerParams pickerParams = const DefaultPickerParams(),
+    PickerItemParams pickerItemParams = const DefaultPickerItemParams(),
+    PickerSearchParams pickerSearchParams = const DefaultPickerSearchParams(),
+    PickerTitleParams pickerTitleParams = const DefaultPickerTitleParams(),
+  }) {
+    _instance = const FlCountryCodePicker._();
+    _pickerParams = pickerParams;
+    _pickerItemParams = pickerItemParams;
+    _pickerSearchParams = pickerSearchParams;
+    _pickerTitleParams = pickerTitleParams;
+  }
 
-  /// {@template show_search_bar}
-  /// An optional argument for showing search bar.
-  ///
-  /// Defaults to `true`.
-  /// {@endtemplate}
-  final bool showSearchBar;
-
-  /// {@template show_dial_code}
-  /// An optional argument for showing dial code at country tiles.
-  ///
-  /// Defaults to `true`.
-  /// {@endtemplate}
-  final bool showDialCode;
-
-  /// {@template title}
-  /// Can be used to customize the title of the country code picker modal.
-  ///
-  /// If null, defaults to a Sliver App Bar
-  /// {@endtemplate}
-  final Widget? title;
-
-  /// {@template default_appbar_background_color}
-  /// Can be used to customize the background color of the default appbar.
-  /// {@endtemplate}
-  final Color defaultAppbarBackgroundColor;
-
-  /// {@template default_appbar_foreground_color}
-  /// Can be used to customize the foreground color of the default appbar.
-  /// Color of icon and text.
-  /// {@endtemplate}
-  final Color defaultAppbarForegroundColor;
-
-  /// {@template default_appbar_close_icon_background_color}
-  /// Can be used to customize the background color of the close icon.
-  /// {@endtemplate}
-  final Color defaultAppbarCloseIconBackgroundColor;
-
-  /// {@template default_appbar_text}
-  /// It is the text of the default appbar.
-  /// {@endtemplate}
-  final String defaultAppbarText;
-
-  /// {@template default_appbar_close_icon}
-  /// It is the close icon of the default appbar.
-  /// {@endtemplate}
-  final IconData defaultAppbarCloseIcon;
-
-  /// {@template search_bar_decoration}
-  /// Can be used to customize the appearance of search bar.
-  /// {@endtemplate}
-  final InputDecoration? searchBarDecoration;
-
-  /// {@template localize}
-  /// An optional argument for localizing the country names based on
-  /// device's current selected Language (country/region).
-  ///
-  /// Defaults to `true`.
-  /// {@endtemplate}
-  final bool localize;
-
-  /// {@template country_text_style}
-  /// Optional parameter to customize the text style of the country names.
-  ///
-  /// If null, defaults to the labelLarge text style from the current [Theme].
-  /// {@endtemplate}
-  final TextStyle? countryTextStyle;
-
-  /// {@template dial_code_text_style}
-  /// Optional parameter to customize the appearance of the country dial codes.
-  ///
-  /// If null, defaults to the titleMedium text style from the current [Theme].
-  /// {@endtemplate}
-  final TextStyle? dialCodeTextStyle;
-
-  /// {@template search_bar_text_style}
-  /// Optional parameter to customize the appearance of the search bar.
-  /// {@endtemplate}
-  final TextStyle? searchBarTextStyle;
+  static FlCountryCodePicker? _instance;
 
   /// Convenient getter for all of the available country codes.
-  List<CountryCode> get countryCodes => List<CountryCode>.from(
+  static List<CountryCode> get countryCodes => List<CountryCode>.from(
         codes.map<CountryCode>(CountryCode.fromMap),
       );
 
-  /// {@template favorites}
-  /// Favorite [CountryCode]s that can be shown at the top of the list.
-  ///
-  /// Should supply the 2 character ISO code of the country.
-  ///
-  /// Based from: https://countrycode.org/
-  /// {@endtemplate}
-  final List<String> favorites;
+  static PickerParams _pickerParams = const DefaultPickerParams();
+  static PickerItemParams _pickerItemParams = const DefaultPickerItemParams();
+  static PickerSearchParams _pickerSearchParams =
+      const DefaultPickerSearchParams();
+  static PickerTitleParams _pickerTitleParams =
+      const DefaultPickerTitleParams();
 
   /// {@template filtered_countries}
   /// Filters all of the [CountryCode]s available and only show the codes that
   /// are existing in this list.
   /// {@endtemplate}
-  final List<String> filteredCountries;
+  static List<String>? _filtered;
 
-  /// Adds all favorites to the list.
-  void addFavorites(List<String> countries) => favorites.addAll(countries);
+  /// Sets the list of filtered countries.
+  static set filteredCountries(List<String> countries) {
+    _filtered = countries;
+  }
 
-  /// Adds all of filtered countries to the list.
-  void addFilteredCountries(List<String> countries) =>
-      filteredCountries.addAll(filteredCountries);
-
-  /// Shows the [CountryCodePickerModal] modal.
+  /// Gets all of the filtered countries.
   ///
-  /// If `scrollToDeviceLocale` was set to `true`, it will override the
-  /// value from `initialSelectedLocale` parameter.
+  /// {@macro filtered_countries}
+  static List<String> get filteredCountries => _filtered ?? const [];
+
+  /// {@template favorite_countries}
+  /// Marks all of the supported countries as favorite that can be
+  /// found from this list. To show the favorite indicator, provide the value of
+  /// [ItemBodyParams] from [PickerItemParams].
+  /// {@endtemplate}
+  static List<String>? _favorites;
+
+  /// Sets the list of favorite countries.
+  static set favoriteCountries(List<String> countries) {
+    _favorites = countries;
+  }
+
+  /// Gets all of the favorite countries.
+  ///
+  /// {@macro favorite_countries}
+  static List<String> get favoriteCountries => _favorites ?? const [];
+
+  /// Shows the [CountryCodePickerModal] bottom sheet for mobile and
+  /// modal for web and desktop.
   ///
   /// Returns the selected [CountryCode].
-  Future<CountryCode?> showPicker({
+  static Future<CountryCode?> showPicker({
     required BuildContext context,
-    bool fullScreen = false,
-    ShapeBorder shape = kShape,
-    double pickerMinHeight = 150,
-    double pickerMaxHeight = 500,
-    String? initialSelectedLocale,
-    bool scrollToDeviceLocale = false,
-    Color barrierColor = kBarrierColor,
-    Clip? clipBehavior = Clip.hardEdge,
-    Color backgroundColor = kBackgroundColor,
   }) async {
     final fullScreenHeight = MediaQuery.of(context).size.height;
     final allowance = MediaQuery.of(context).padding.top -
         MediaQuery.of(context).padding.bottom;
 
     // Dynamic modal height computation.
-    final maxHeight =
-        fullScreen ? fullScreenHeight - allowance : pickerMaxHeight;
+    final maxHeight = _pickerParams.fullScreen
+        ? fullScreenHeight - allowance
+        : _pickerParams.maxHeight;
 
     final constraints = BoxConstraints(
       maxHeight: maxHeight,
-      minHeight: pickerMinHeight,
+      minHeight: _pickerParams.minHeight,
     );
 
     // For automatic scrolling.
     final deviceLocale = ui.PlatformDispatcher.instance.locale.countryCode;
 
     String? focusedCountry;
-    if (scrollToDeviceLocale) {
+    if (_pickerParams.scrollToDeviceCurrentLocale) {
       if (_codeIsSupported(deviceLocale)) {
         focusedCountry = deviceLocale;
       }
     } else {
-      if (_codeIsSupported(initialSelectedLocale)) {
-        focusedCountry = initialSelectedLocale;
+      if (_codeIsSupported(_pickerParams.initialSelectedCountry)) {
+        focusedCountry = _pickerParams.initialSelectedCountry;
       }
     }
 
-    final country = showModalBottomSheet<CountryCode?>(
-      elevation: 0,
-      shape: shape,
+    if (Platform.isAndroid || Platform.isIOS) {
+      return showModalBottomSheet<CountryCode?>(
+        elevation: 0,
+        shape: _pickerParams.shape,
+        context: context,
+        useSafeArea: true,
+        constraints: constraints,
+        barrierColor: _pickerParams.barrierColor,
+        backgroundColor: _pickerParams.backgroundColor,
+        isScrollControlled: true,
+        builder: (_) => CountryCodePickerModal(
+          filteredCountries: filteredCountries,
+          favoriteCountries: favoriteCountries,
+          focusedCountry: focusedCountry,
+          localized: _pickerParams.localized,
+          pickerParams: _pickerParams,
+          pickerItemParams: _pickerItemParams,
+          pickerSearchParams: _pickerSearchParams,
+          pickerTitleParams: _pickerTitleParams,
+        ),
+      );
+    }
+
+    return showDialog(
       context: context,
+      barrierColor: _pickerParams.barrierColor,
+      barrierDismissible: true,
       useSafeArea: true,
-      constraints: constraints,
-      clipBehavior: clipBehavior,
-      barrierColor: barrierColor,
-      backgroundColor: backgroundColor,
-      isScrollControlled: true,
-      builder: (_) => CountryCodePickerModal(
-        title: title,
-        defaultAppbarBackgroundColor: defaultAppbarBackgroundColor,
-        defaultAppbarForegroundColor: defaultAppbarForegroundColor,
-        defaultAppbarCloseIconBackgroundColor:
-            defaultAppbarCloseIconBackgroundColor,
-        defaultAppbarText: defaultAppbarText,
-        defaultAppbarCloseIcon: defaultAppbarCloseIcon,
-        localize: localize,
-        favorites: favorites,
-        showDialCode: showDialCode,
-        favoritesIcon: favoritesIcon,
-        horizontalTitleGap: horizontalTitleGap,
-        showSearchBar: showSearchBar,
-        filteredCountries: filteredCountries,
-        searchBarDecoration: searchBarDecoration,
-        focusedCountry: focusedCountry,
-        countryTextStyle: countryTextStyle,
-        dialCodeTextStyle: dialCodeTextStyle,
-        searchBarTextStyle: searchBarTextStyle,
+      builder: (_) => Dialog(
+        elevation: 1,
+        shape: _pickerParams.shape,
+        alignment: Alignment.center,
+        child: SizedBox(
+          width: _pickerParams.width,
+          height: _pickerParams.maxHeight,
+          child: CountryCodePickerModal(
+            filteredCountries: filteredCountries,
+            favoriteCountries: favoriteCountries,
+            focusedCountry: focusedCountry,
+            localized: _pickerParams.localized,
+            pickerParams: _pickerParams,
+            pickerItemParams: _pickerItemParams,
+            pickerSearchParams: _pickerSearchParams,
+            pickerTitleParams: _pickerTitleParams,
+          ),
+        ),
       ),
     );
-
-    return country;
   }
 
-  bool _codeIsSupported(String? code) {
+  static bool _codeIsSupported(String? code) {
     if (code == null) return false;
     final allCountryCodes = codes.map(CountryCode.fromMap).toList();
     final index = allCountryCodes.indexWhere((c) => c.code == code);

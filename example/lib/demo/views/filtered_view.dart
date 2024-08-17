@@ -16,7 +16,7 @@ class _FilteredPickerViewState extends State<FilteredPickerView> {
   @override
   void initState() {
     final filteredCountries = ['US', 'PH', 'AU', 'JP'];
-    countryPicker = FlCountryCodePicker(filteredCountries: filteredCountries);
+    // countryPicker = FlCountryCodePicker(filteredCountries: filteredCountries);
     super.initState();
   }
 
@@ -26,7 +26,7 @@ class _FilteredPickerViewState extends State<FilteredPickerView> {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const PickerTitle(title: 'Picker with Filtered View'),
+        const DemoTitle(title: 'Picker with Filtered View'),
         TextFormField(
           textInputAction: TextInputAction.done,
           keyboardType: TextInputType.number,
@@ -34,7 +34,7 @@ class _FilteredPickerViewState extends State<FilteredPickerView> {
           decoration: InputDecoration(
             prefix: GestureDetector(
               onTap: () async {
-                final code = await countryPicker.showPicker(
+                final code = await FlCountryCodePicker.showPicker(
                   context: context,
                 );
                 if (code != null) {

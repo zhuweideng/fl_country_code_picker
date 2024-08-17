@@ -16,10 +16,7 @@ class _FavoritePickerViewState extends State<FavoritePickerView> {
   @override
   void initState() {
     final favoriteCountries = ['US', 'PH', 'AU', 'JP'];
-    countryPicker = FlCountryCodePicker(
-      favorites: favoriteCountries,
-      favoritesIcon: const Icon(Icons.star, color: Colors.yellow),
-    );
+    countryPicker = FlCountryCodePicker.getInstance();
     super.initState();
   }
 
@@ -29,7 +26,7 @@ class _FavoritePickerViewState extends State<FavoritePickerView> {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const PickerTitle(title: 'Picker with Favorite View'),
+        const DemoTitle(title: 'Picker with Favorite View'),
         TextFormField(
           textInputAction: TextInputAction.done,
           keyboardType: TextInputType.number,
@@ -37,7 +34,7 @@ class _FavoritePickerViewState extends State<FavoritePickerView> {
           decoration: InputDecoration(
             prefix: GestureDetector(
               onTap: () async {
-                final code = await countryPicker.showPicker(
+                final code = await FlCountryCodePicker.showPicker(
                   context: context,
                 );
                 if (code != null) {

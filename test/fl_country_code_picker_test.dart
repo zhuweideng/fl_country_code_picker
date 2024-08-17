@@ -6,7 +6,7 @@ void main() {
   late FlCountryCodePicker picker;
 
   setUp(() {
-    picker = FlCountryCodePicker();
+    picker = FlCountryCodePicker.getInstance();
   });
 
   group('FlCountryCodePicker', () {
@@ -17,7 +17,7 @@ void main() {
     group('countryCodes', () {
       test('gets list of country codes', () {
         expect(
-          picker.countryCodes.runtimeType,
+          FlCountryCodePicker.countryCodes.runtimeType,
           List<CountryCode>,
         );
       });

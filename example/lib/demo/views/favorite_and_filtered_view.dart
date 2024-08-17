@@ -19,11 +19,7 @@ class _FavoriteAndFilteredPickerViewState
   void initState() {
     final filteredCountries = ['US', 'PH', 'AU', 'JP', ''];
     final favoriteCountries = ['US', 'PH', 'AU', 'JP'];
-    countryPicker = FlCountryCodePicker(
-      filteredCountries: filteredCountries,
-      favorites: favoriteCountries,
-      showSearchBar: false,
-    );
+    // countryPicker = FlCountryCodePicker(filteredCountries: filteredCountries);
     super.initState();
   }
 
@@ -33,7 +29,6 @@ class _FavoriteAndFilteredPickerViewState
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const PickerTitle(title: 'Picker with Favorite & Filtered View'),
         TextFormField(
           textInputAction: TextInputAction.done,
           keyboardType: TextInputType.number,
@@ -41,9 +36,8 @@ class _FavoriteAndFilteredPickerViewState
           decoration: InputDecoration(
             prefix: GestureDetector(
               onTap: () async {
-                final code = await countryPicker.showPicker(
-                  context: context,
-                );
+                final code =
+                    await FlCountryCodePicker.showPicker(context: context);
                 if (code != null) {
                   setState(() => countryCode = code);
                 }

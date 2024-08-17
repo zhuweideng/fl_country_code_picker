@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class PickerTitle extends StatelessWidget {
-  const PickerTitle({
+class DemoTitle extends StatelessWidget {
+  const DemoTitle({
     Key? key,
     required this.title,
   }) : super(key: key);
