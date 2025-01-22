@@ -1187,7 +1187,7 @@ const List<Map<String, dynamic>> codes = [
   },
   {
     "name": "Taiwan",
-    "code": "TW",
+    "code": "CN",
     "dial_code": "+886",
     "national_significant_number": 9,
   },
